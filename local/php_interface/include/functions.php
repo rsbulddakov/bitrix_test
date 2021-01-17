@@ -20,6 +20,28 @@ class CustomEventsClass
             }
         }
     }
+
+    /**
+     * Функция не дает обновить поля Имя и Код для раздела при импорте из 1С
+     */
+    function disabledSectionChange(&$arFields)
+    {
+        if (@$_REQUEST['mode'] == 'import') {
+            unset($arFields['NAME']);
+            unset($arFields['CODE']);
+        }
+    }
+
+    /**
+     * Функция отправляет уведомление об успешном окончании выгрузки
+     * !Важно: для корректной работы функции необходим активный почтовый шаблон с типом события "COMPLETE_1C_IMPORT"
+     * Примечание: реализовано через почтовыве шаблоны для удобства пользователей админки и возможности изменения адресов получателей уведомления
+     */
+
+    function sendCompleteImportNotification()
+    {
+        CEvent::Send('COMPLETE_1C_IMPORT', 's1', array());
+    }
 }
 /**
  * п1.1
@@ -37,3 +59,23 @@ Main\EventManager::getInstance()->addEventHandler(
     'OnSaleOrderBeforeSaved',
     array('CustomEventsClass', 'addCustomOrderProps')
 );
+/**
+ * п2.1
+ * Перехват служебного события о завершении выгрузки
+ */
+Main\EventManager::getInstance()->addEventHandler(
+    "catalog",
+    "OnCompleteCatalogImport1C",
+    array("CustomEventsClass", "sendCompleteImportNotification")
+);
+/**
+ * п2.2
+ * Перехват изменения названия раздела при выгрузке из 1С
+ */
+Main\EventManager::getInstance()->addEventHandler(
+    "iblock",
+    "OnBeforeIBlockSectionUpdate",
+    array("CustomEventsClass", "disabledSectionChange")
+);
+
+
