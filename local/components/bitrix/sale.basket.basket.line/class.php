@@ -450,6 +450,12 @@ class SaleBasketLineComponent extends CBitrixComponent
 	{
 		//TODO: need refactoring
 		$arImgFields = array ("PREVIEW_PICTURE", "DETAIL_PICTURE", "PROPERTY_MORE_PHOTO");
+
+        //Если включен вывод картинок по артикулу, вытаскиваем артикул
+        if($this->arParams['SHOW_CUSTOM_IMAGES'] == 'Y'){
+            $arImgFields[] = 'PROPERTY_CML2_ARTICLE';
+        }
+
 		$arProductData = getProductProps(array_merge($arElementId, $arSku2Parent), array_merge(array("ID"), $arImgFields));
 
 		foreach ($arBasketItems as &$arItem)
@@ -477,23 +483,41 @@ class SaleBasketLineComponent extends CBitrixComponent
 					}
 				}
 			}
-
-			$arItem["PICTURE_SRC"] = "";
-			$arImage = null;
-			if (isset($arItem["PREVIEW_PICTURE"]) && intval($arItem["PREVIEW_PICTURE"]) > 0)
-				$arImage = CFile::GetFileArray($arItem["PREVIEW_PICTURE"]);
-			elseif (isset($arItem["DETAIL_PICTURE"]) && intval($arItem["DETAIL_PICTURE"]) > 0)
-				$arImage = CFile::GetFileArray($arItem["DETAIL_PICTURE"]);
-			if ($arImage)
-			{
-				$arFileTmp = CFile::ResizeImageGet(
-					$arImage,
-					array("width" => $this->arParams['MAX_IMAGE_SIZE'], "height" => $this->arParams['MAX_IMAGE_SIZE']),
-					BX_RESIZE_IMAGE_PROPORTIONAL,
-					true
-				);
-				$arItem["PICTURE_SRC"] = $arFileTmp["src"];
-			}
+			/**
+             * п.3
+             * Кастомизация получения пути изображений
+             * !Важно: если изображение по артикулу не найдено,
+             * возвращаемся к стандартному поведению
+             */
+            if($this->arParams['SHOW_CUSTOM_IMAGES'] == 'Y'){
+                $arArticleImg = '';
+                $filename = $this->arParams['SHOW_CUSTOM_IMAGES_PATH'].$arItem["PROPERTY_CML2_ARTICLE_VALUE"];
+                $arTypes = array('.jpeg', '.jpg', '.png', '.gif');
+                foreach($arTypes as $ext){
+                    if(CFile::IsImage($_SERVER["DOCUMENT_ROOT"].$filename.$ext, 'image/')){
+                        $arArticleImg = $filename;
+                        break;
+                    }
+                }
+                if($arArticleImg) $arItem["PICTURE_SRC"] = $arArticleImg;
+            }
+            if(!$arItem["PICTURE_SRC"]) {
+                $arItem["PICTURE_SRC"] = "";
+                $arImage = null;
+                if (isset($arItem["PREVIEW_PICTURE"]) && intval($arItem["PREVIEW_PICTURE"]) > 0)
+                    $arImage = CFile::GetFileArray($arItem["PREVIEW_PICTURE"]);
+                elseif (isset($arItem["DETAIL_PICTURE"]) && intval($arItem["DETAIL_PICTURE"]) > 0)
+                    $arImage = CFile::GetFileArray($arItem["DETAIL_PICTURE"]);
+                if ($arImage) {
+                    $arFileTmp = CFile::ResizeImageGet(
+                        $arImage,
+                        array("width" => $this->arParams['MAX_IMAGE_SIZE'], "height" => $this->arParams['MAX_IMAGE_SIZE']),
+                        BX_RESIZE_IMAGE_PROPORTIONAL,
+                        true
+                    );
+                    $arItem["PICTURE_SRC"] = $arFileTmp["src"];
+                }
+            }
 		}
 	}
 

@@ -154,6 +154,29 @@ if($arCurrentValues["SHOW_PRODUCTS"] == "Y")
 			"DEFAULT" => "Y",
 			"PARENT" => "LIST",
 		),
+        //CUSTOM
+        /*
+            Добаляем настройку для поиска изображений товара по артикулу (тип чекбокс)
+        */
+        "SHOW_CUSTOM_IMAGES" => array(
+            "NAME" => GetMessage("SBBL_SHOW_CUSTOM_IMAGES"),
+            "TYPE" => "CHECKBOX",
+            "DEFAULT" => "N",
+            "PARENT" => "LIST",
+            "REFRESH" => "Y"
+        ),
+        /*
+            Если включен вывод изображений товара по артикулу, добавляем поле ввода пути до директории (тип строка)
+        */
+        "SHOW_CUSTOM_IMAGES_PATH" => array(
+            "NAME" => GetMessage("SBBL_SHOW_CUSTOM_IMAGES_PATH"),
+            "TYPE" => "STRING",
+            "DEFAULT" => '/upload/photo/',
+            "COLS" => 25,
+            "PARENT" => "LIST",
+            "HIDDEN" => (isset($arCurrentValues['SHOW_CUSTOM_IMAGES']) && $arCurrentValues['SHOW_CUSTOM_IMAGES'] == 'N' ? 'Y' : 'N')
+        ),
+        //END CUSTOM
 		"SHOW_PRICE" => array(
 			"NAME" => GetMessage('SBBL_SHOW_PRICE'),
 			"TYPE" => "CHECKBOX",
